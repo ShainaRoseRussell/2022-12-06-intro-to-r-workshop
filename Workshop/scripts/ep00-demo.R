@@ -15,7 +15,7 @@ diamonds <- read.csv(file = "data_raw/diamond.csv")
 # Load the GGPLOT2 library
 library(ggplot2)
 
-# Generate a Plot 
+# Generate a Plot (you can remove 'theme_dark() +' for a light background)
 ggplot(diamonds) + 
   theme_dark() +
   geom_point(aes(x=carat, y=price, color=cut)) +
