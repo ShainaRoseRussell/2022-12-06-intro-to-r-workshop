@@ -136,11 +136,7 @@ ggplot(data=surveys_complete, mapping=aes(x=species_id, y=weight)) +
 
 
 
-
-
-
 # one discrete, one continuous variable
-
 
 
 
@@ -168,9 +164,6 @@ ggplot(data=surveys_complete, mapping=aes(x=species_id, y=weight)) +
 ggplot(data=surveys_complete, mapping=aes(x=species_id, y=weight)) + 
   geom_jitter(alpha=.3, color = "tomato") +
   geom_violin(alpha=0)
-
-
-
 
 
 # ------------------------
@@ -241,8 +234,8 @@ ggplot(data=surveys_complete, mapping=aes(x=species_id, y=weight)) +
 # 
 
 # counts per year for each genus
-year_counts <- surveys_complete %>%
-  count(year, genus)
+year_sex <- surveys_complete %>%
+  count(year, sex, genus)
 
 ggplot(data = year_counts, mapping = aes(x = year, y = n, group = genus))+
   geom_line()
@@ -270,16 +263,29 @@ surveys_complete %>%
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Split one plot into Multiple plots
+ggplot(data = year_counts, mapping = aes(x = year, y = n)) +
+  geom_line()+
+  facet_wrap(facets = vars(genus))
 
+ggplot(data = year_sex, mapping = aes(x = year, y = n, colour = sex)) +
+  geom_line() +
+  facet_wrap(facets = vars(genus))  ##isn't working 
 
-
-
+surveys_complete%>%
+  count(year, sex, genus) %>%
+  ggplot(mapping = aes(x = year, y = n, colour = sex)) +
+  geom_line() +
+  facet_wrap(facets = vars(genus))
+             
 # organise rows and cols to show sex and genus
-
-
+ggplot(data = year_sex, mapping = aes(x = year, y = n, colour = sex)) +
+  geom_line()+
+  facet_grid(row = vars(sex), col = vars(genus))
 
 # organise rows by genus only
-
+ggplot(data = year_sex, mapping = aes(x = year, y = n, colour = sex)) +
+  geom_line()+
+  facet_grid(row = vars(genus))
 
 # ------------------------
 # Exercise/Challenge 8
@@ -287,11 +293,19 @@ surveys_complete %>%
 # How would you modify this code so the faceting is organised into only columns 
 # instead of only rows?
 
+ggplot(data = year_sex, mapping = aes(x = year, y = n, colour = sex)) +
+  geom_line()+
+  facet_grid(col = vars(genus))
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Topic: Themes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # themes set a look
+ggplot(data = year_sex, mapping = aes (x = year, y = n, colour = sex)) +
+  geom_line()+
+  facet_wrap(vars(genus))+
+  theme_minimal()
 
 
 
@@ -303,17 +317,76 @@ surveys_complete %>%
 # Hint: need to do a group_by() and summarize() to get the data before plotting
 
 
+yearly_weight <- surveys_complete %>%
+  group_by(year, species_id) %>%
+  summarise(mean_weight = mean(weight))
+
+ggplot(data = yearly_weight, mapping = aes(x = year, y = mean_weight, colour = species_id)) +
+  geom_line()
+
+yearly_weight %>%
+  ggplot()
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Topic: Customisation
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Makinging it your own
 
+year_sex <- surveys_complete %>%
+  count(year, genus, sex)
 
+
+year_sex %>%
+  ggplot(mapping = aes (x = year, y = n, colour = sex))+
+  geom_line()+
+  facet_wrap(vars(genus))+
+  labs(title = "Observed genera through time", 
+    x = "Year of observations",
+    y = "Number of individuals")+
+  theme_bw()+   #write a note about what it does
+  theme(text = element_text(size=16),
+        axis.text.x = element_text(colour = "grey20", 
+                             size = 12, 
+                             angle = 90,
+                             hjust = 0.5, 
+                             vjust = 0.5),
+  strip.text = element_text(face = "italic"))
+
+# website where i found this code -- always post website where you got a code from
 
 # save theme configuration as an object
+grey_theme <- theme_bw()+   #write a note about what it does
+  theme(text = element_text(size=16),
+        axis.text.x = element_text(colour = "grey20", 
+                                   size = 12, 
+                                   angle = 90,
+                                   hjust = 0.5, 
+                                   vjust = 0.5),
+        strip.text = element_text(face = "italic"))
 
-
+year_sex %>%
+  ggplot(mapping = aes (x = year, y = n, colour = sex))+
+  geom_line()+
+  facet_wrap(vars(genus))+
+  labs(title = "Observed genera through time", 
+       x = "Year of observations",
+       y = "Number of individuals")+
+  grey_theme
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Topic: Exporting plots
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+my_plot <- year_sex %>%
+  ggplot(mapping = aes (x = year, y = n, colour = sex))+
+  geom_line()+
+  facet_wrap(vars(genus))+
+  labs(title = "Observed genera through time", 
+       x = "Year of observations",
+       y = "Number of individuals")+
+  grey_theme
+
+ggsave("figures/my_plot.pdf", my_plot, width = 15, height = 10)
+ggsave("figures/my_plot.png", my_plot, width = 15, height = 10)
+
